@@ -21,7 +21,13 @@ public class GridOvelay : MonoBehaviour
 
     public Color mainColor = new Color(0f,1f,0f,1f);
     public Color subColor = new Color(0f,0.5f,0f,1f);
-    
+
+    private void Start()
+    {
+        gridSizeX = GameManager.SCREEN_WIDTH;
+        gridSizeY = GameManager.SCREEN_HEIGTH;
+    }
+
     void CreateLineMaterial()
     {
         if (!lineMaterial)

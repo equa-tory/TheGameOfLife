@@ -6,6 +6,10 @@ using System.Xml.Serialization;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager Instance;
+
+    public Hud hud;
+    
     public static int SCREEN_WIDTH = 86;
     public static int SCREEN_HEIGTH = 48;
 
@@ -22,7 +26,11 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        PlaceCell(2);
+        EventManager.StartListening("SavePattern", SavePattern);
+        EventManager.StartListening("LoadPattern", LoadPattern);
+
+        Instance = this;
+        PlaceCell(1);
     }
 
     private void Update()
@@ -47,17 +55,20 @@ public class GameManager : MonoBehaviour
     }
 
     void UserInput()
-    {        
-        if (Input.GetMouseButtonDown(0))
+    {
+        if (!hud.isActive)
         {
-            Vector2 mousePoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-            int x = Mathf.RoundToInt(mousePoint.x);
-            int y = Mathf.RoundToInt(mousePoint.y);
-
-            if(x>=0 && y>=0 && x<SCREEN_WIDTH && y < SCREEN_HEIGTH)
+            if (Input.GetMouseButtonDown(0))
             {
-                grid[x, y].SetAlive(!grid[x, y].isAlive);
+                Vector2 mousePoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+                int x = Mathf.RoundToInt(mousePoint.x);
+                int y = Mathf.RoundToInt(mousePoint.y);
+
+                if (x >= 0 && y >= 0 && x < SCREEN_WIDTH && y < SCREEN_HEIGTH)
+                {
+                    grid[x, y].SetAlive(!grid[x, y].isAlive);
+                }
             }
         }
 
@@ -73,12 +84,14 @@ public class GameManager : MonoBehaviour
 
         if (Input.GetKeyUp(KeyCode.S))
         {
-            SavePattern();
+            //SavePattern();
+            hud.ShowSaveDialog();
         }
 
         if (Input.GetKeyUp(KeyCode.L))
         {
-            LoadPattern();
+            //LoadPattern();
+            hud.ShowLoadDialog();
         }
     }
 
@@ -89,7 +102,9 @@ public class GameManager : MonoBehaviour
         if (!Directory.Exists(path)) return;
 
         XmlSerializer serializer = new XmlSerializer(typeof(Pattern));
-        path += "/test.xml";
+        string patternName = hud.loadDialog.patternName.options[hud.loadDialog.patternName.value].text;
+        path = path + "/" + patternName + ".xml";
+
 
         StreamReader reader = new StreamReader(path);
         Pattern pattern = (Pattern)serializer.Deserialize(reader.BaseStream);
@@ -156,7 +171,7 @@ public class GameManager : MonoBehaviour
 
         XmlSerializer serializer = new XmlSerializer(typeof(Pattern));
 
-        StreamWriter writer = new StreamWriter(path + "/test.xml");
+        StreamWriter writer = new StreamWriter(path + "/" + hud.saveDialog.patternName.text + ".xml");
         serializer.Serialize(writer.BaseStream, pattern);
         writer.Close();
 
