@@ -267,7 +267,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   showMain: 1
-  showSub: 0
+  showSub: 1
   gridSizeX: 86
   gridSizeY: 48
   startX: -0.5
@@ -275,5 +275,5 @@ MonoBehaviour:
   startZ: 0
   smallStep: 1
   largeStep: 8
-  mainColor: {r: 0, g: 1, b: 0, a: 1}
-  subColor: {r: 0, g: 0.5, b: 0, a: 1}
+  mainColor: {r: 0, g: 0.5283019, b: 0, a: 1}
+  subColor: {r: 0.7987421, g: 1, b: 0.7987421, a: 1}
