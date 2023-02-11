@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
+using System.Xml.Serialization;
 
 public class GameManager : MonoBehaviour
 {
@@ -11,6 +13,8 @@ public class GameManager : MonoBehaviour
     public float speed = 0.1f;
 
     private float timer = 0;
+
+    public bool simalationEnabled = false;
 
     Cell[,] grid = new Cell[SCREEN_WIDTH, SCREEN_HEIGTH];
 
@@ -23,19 +27,142 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (timer >= speed)
+        if (simalationEnabled)
         {
-            timer = 0f;
+            if (timer >= speed)
+            {
+                timer = 0f;
 
-            CountNeighbors();
+                CountNeighbors();
 
-            PopulationControl();
+                PopulationControl();
+            }
+            else
+            {
+                timer += Time.deltaTime;
+            }
         }
-        else
+
+        UserInput();
+    }
+
+    void UserInput()
+    {        
+        if (Input.GetMouseButtonDown(0))
         {
-            timer += Time.deltaTime;
+            Vector2 mousePoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+            int x = Mathf.RoundToInt(mousePoint.x);
+            int y = Mathf.RoundToInt(mousePoint.y);
+
+            if(x>=0 && y>=0 && x<SCREEN_WIDTH && y < SCREEN_HEIGTH)
+            {
+                grid[x, y].SetAlive(!grid[x, y].isAlive);
+            }
+        }
+
+        if (Input.GetKeyUp(KeyCode.P))
+        {
+            simalationEnabled = false;
+        }
+
+        if (Input.GetKeyUp(KeyCode.B))
+        {
+            simalationEnabled = true;
+        }
+
+        if (Input.GetKeyUp(KeyCode.S))
+        {
+            SavePattern();
+        }
+
+        if (Input.GetKeyUp(KeyCode.L))
+        {
+            LoadPattern();
         }
     }
+
+    private void LoadPattern()
+    {
+        string path = "patterns";
+
+        if (!Directory.Exists(path)) return;
+
+        XmlSerializer serializer = new XmlSerializer(typeof(Pattern));
+        path += "/test.xml";
+
+        StreamReader reader = new StreamReader(path);
+        Pattern pattern = (Pattern)serializer.Deserialize(reader.BaseStream);
+        reader.Close();
+
+        bool isAlive;
+
+        int x = 0, y = 0;
+
+        Debug.Log(pattern.patternString);
+
+        foreach(char c in pattern.patternString)
+        {
+            if(c.ToString() == "1")
+            {
+                isAlive = true;
+            }
+            else
+            {
+                isAlive = false;
+            }
+
+            grid[x, y].SetAlive(isAlive);
+
+            x++;
+
+            if(x == SCREEN_WIDTH)
+            {
+                x = 0;
+                y++;
+            }
+        }
+    }
+
+    private void SavePattern()
+    {
+        string path = "patterns";
+
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
+
+        Pattern pattern = new Pattern();
+
+        string patternString = null;
+
+        for(int y = 0; y<SCREEN_HEIGTH; y++)
+        {
+            for(int x = 0; x<SCREEN_WIDTH; x++)
+            {
+                if(grid[x,y].isAlive == false)
+                {
+                    patternString += "0";
+                }
+                else
+                {
+                    patternString += "1";
+                }
+            }
+        }
+
+        pattern.patternString = patternString;
+
+        XmlSerializer serializer = new XmlSerializer(typeof(Pattern));
+
+        StreamWriter writer = new StreamWriter(path + "/test.xml");
+        serializer.Serialize(writer.BaseStream, pattern);
+        writer.Close();
+
+        Debug.Log(pattern.patternString);
+    }
+
 
     void CountNeighbors()
     {
