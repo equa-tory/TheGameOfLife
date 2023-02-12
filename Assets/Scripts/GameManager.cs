@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 using UnityEngine;
+using TMPro;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -24,13 +26,29 @@ public class GameManager : MonoBehaviour
 
     public Cell cell;
 
+    public GameObject helpPanel;
+
+    public TMP_Text speedText;
+    public Image speedBG;
+    float speedBgA;
+    float speedA;
+    float _timer;
+
+    public float timeToFade;
+
+    [Header("Keybindings")]
+    public KeyCode playKey = KeyCode.Space;
+    public KeyCode stopKey = KeyCode.Space;
+    public KeyCode saveKey = KeyCode.S;
+    public KeyCode loadKey = KeyCode.L;
+
     private void Start()
     {
         EventManager.StartListening("SavePattern", SavePattern);
         EventManager.StartListening("LoadPattern", LoadPattern);
 
         Instance = this;
-        PlaceCell(1);
+        PlaceCell(0);
     }
 
     private void Update()
@@ -70,33 +88,78 @@ public class GameManager : MonoBehaviour
                     grid[x, y].SetAlive(!grid[x, y].isAlive);
                 }
             }
+
+            if (Input.GetKeyUp(stopKey))
+            {
+                if (simalationEnabled) simalationEnabled = false;
+                else simalationEnabled = true;
+                helpPanel.SetActive(false);
+            }
+
+            /*if (Input.GetKeyUp(playKey))
+            {
+                simalationEnabled = true;
+            }*/
+
+            if (Input.GetKeyUp(saveKey))
+            {
+                //SavePattern();
+                hud.ShowSaveDialog();
+                helpPanel.SetActive(false);
+            }
+
+            if (Input.GetKeyUp(loadKey))
+            {
+                //LoadPattern();
+                hud.ShowLoadDialog();
+                helpPanel.SetActive(false);
+            }
+
+            if (Input.GetAxis("Mouse ScrollWheel") > 0)
+            {
+                if (speed < 1) speed += 0.05f;
+                else speed = 1;
+
+                speedBgA = .5f;
+                speedA = 1f;
+                _timer = timeToFade;
+
+                speedText.text = "Speed: " + System.Math.Round(speed, 2);
+            }
+            if (Input.GetAxis("Mouse ScrollWheel") < 0) {
+                if (speed > 0.01) speed -= 0.05f;
+                else speed = 0.01f;
+
+                speedBgA = .5f;
+                speedA = 1f;
+                _timer = timeToFade;
+
+                speedText.text = "Speed: " + System.Math.Round(speed, 2);
+            }
+
+            speedBG.color = new Color(0, 0, 0, speedBgA);
+            speedText.color = new Color(255, 255, 255, speedA);
+
+            if (speedBgA > 0)
+            {
+                if (_timer > 0) _timer -= Time.deltaTime;
+                else if(_timer<=0)speedBgA -= Time.deltaTime / 2;
+            }
+
+            if (speedA > 0)
+            {
+                if (_timer > 0) _timer -= Time.deltaTime;
+                else if (_timer <= 0) speedA -= Time.deltaTime;
+            }
         }
 
-        if (Input.GetKeyUp(KeyCode.P))
-        {
-            simalationEnabled = false;
-        }
-
-        if (Input.GetKeyUp(KeyCode.B))
-        {
-            simalationEnabled = true;
-        }
-
-        if (Input.GetKeyUp(KeyCode.S))
-        {
-            //SavePattern();
-            hud.ShowSaveDialog();
-        }
-
-        if (Input.GetKeyUp(KeyCode.L))
-        {
-            //LoadPattern();
-            hud.ShowLoadDialog();
-        }
     }
 
     private void LoadPattern()
     {
+        simalationEnabled = false;
+        helpPanel.SetActive(true);
+
         string path = "patterns";
 
         if (!Directory.Exists(path)) return;
@@ -280,7 +343,21 @@ public class GameManager : MonoBehaviour
 
     void PlaceCell(int type)
     {
-        if (type == 1)
+        if (type == 0)
+        {
+
+            for (int y = 0; y < SCREEN_HEIGTH; y++)
+            {
+                for (int x = 0; x < SCREEN_WIDTH; x++)
+                {
+                    Cell _cell = Instantiate(cell, new Vector2(x, y), Quaternion.identity);
+                    grid[x, y] = _cell;
+                    grid[x, y].SetAlive(false);
+                }
+
+            }
+        }
+        else if (type == 1)
         {
 
 
